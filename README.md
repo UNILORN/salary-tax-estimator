@@ -4,6 +4,8 @@
 
 ![給与手取り計算シミュレーターの画面](img/image.png)
 
+[![Launch App](https://img.shields.io/badge/Launch%20App-Open-22c55e?style=for-the-badge)](https://unilorn.github.io/salary-tax-estimator/)
+
 ## 機能
 
 - 月額給与（額面）から手取り額を自動計算
@@ -34,18 +36,12 @@ pnpm build
 
 本プロジェクトは静的エクスポート（`next export` 相当）設定です。ビルド成果物は `out/` に出力されます。
 
-## GitHub Pages 公開（CI）
+## GitHub Pages
 
-`main` ブランチへの push で、GitHub Actions が自動で Pages へデプロイします。
-
+- 公開 URL: https://unilorn.github.io/salary-tax-estimator/
+- `main` ブランチへの push で GitHub Actions から自動デプロイ
 - ワークフロー: `.github/workflows/deploy-pages.yml`
-- ビルド: `pnpm install --frozen-lockfile && pnpm run build`
-- 配信成果物: `out/`
 
-### 初回設定
-
-1. GitHub リポジトリの `Settings` → `Pages` を開く
-2. `Build and deployment` の `Source` を `GitHub Actions` に設定する
 
 ## 計算ロジックについて
 
