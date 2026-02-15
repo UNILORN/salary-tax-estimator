@@ -23,6 +23,14 @@ export function SalaryInputForm({ onCalculate }: SalaryInputFormProps) {
   const [salary, setSalary] = useState("")
   const [prefecture, setPrefecture] = useState("13") // 東京都
   const [isNursingCare, setIsNursingCare] = useState(false)
+  const quickFillAmounts = [
+    ...Array.from({ length: 10 }, (_, i) => (i + 1) * 100000),
+    2000000,
+    4000000,
+    6000000,
+    8000000,
+    10000000,
+  ]
 
   const formatNumber = (value: string) => {
     const num = value.replace(/[^0-9]/g, "")
@@ -69,7 +77,7 @@ export function SalaryInputForm({ onCalculate }: SalaryInputFormProps) {
           />
         </div>
         <div className="flex flex-wrap gap-2">
-          {[200000, 250000, 300000, 350000, 400000, 500000].map((amt) => (
+          {quickFillAmounts.map((amt) => (
             <button
               key={amt}
               type="button"
