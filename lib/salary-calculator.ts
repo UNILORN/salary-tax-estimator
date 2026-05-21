@@ -161,10 +161,18 @@ export interface CalculationResult {
   monthlyTakeHome: number
   spouseMonthlySalary: number
   spouseAnnualIncome: number
+  spouseHealthInsurance: number
+  spouseNursingCareInsurance: number
+  spousePension: number
+  spouseEmploymentInsurance: number
+  spouseMonthlyIncomeTax: number
+  spouseMonthlyResidentTax: number
+  spouseTotalMonthlyDeduction: number
   spouseMonthlyTakeHome: number
   spouseIsSocialDependent: boolean
   spouseSpecialDeductionIncomeTax: number
   spouseSpecialDeductionResidentTax: number
+  householdAnnualIncome: number
   householdMonthlyTakeHome: number
 }
 
@@ -198,10 +206,18 @@ export function calculateSalary(monthlySalary: number, prefectureCode: string, i
     monthlyTakeHome: husband.monthlyTakeHome,
     spouseMonthlySalary,
     spouseAnnualIncome,
+    spouseHealthInsurance: wife.healthInsurance,
+    spouseNursingCareInsurance: wife.nursingCareInsurance,
+    spousePension: wife.pension,
+    spouseEmploymentInsurance: wife.employmentInsurance,
+    spouseMonthlyIncomeTax: wife.monthlyIncomeTax,
+    spouseMonthlyResidentTax: wife.monthlyResidentTax,
+    spouseTotalMonthlyDeduction: spouseMonthlySalary - wife.monthlyTakeHome,
     spouseMonthlyTakeHome: wife.monthlyTakeHome,
     spouseIsSocialDependent,
     spouseSpecialDeductionIncomeTax,
     spouseSpecialDeductionResidentTax,
+    householdAnnualIncome: husband.annualIncome + wife.annualIncome,
     householdMonthlyTakeHome: husband.monthlyTakeHome + wife.monthlyTakeHome,
   }
 }

@@ -1,7 +1,9 @@
 "use client"
 
+import { useMemo, useState } from "react"
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts"
 import type { CalculationResult } from "@/lib/salary-calculator"
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 
 interface DeductionChartProps {
   result: CalculationResult
@@ -22,26 +24,65 @@ const COLORS = [
 ]
 
 export function DeductionChart({ result }: DeductionChartProps) {
-  const data = [
-    { name: "手取り", value: result.monthlyTakeHome },
-    { name: "健康保険", value: result.healthInsurance },
-    { name: "厚生年金", value: result.pension },
-    { name: "雇用保険", value: result.employmentInsurance },
-    { name: "所得税", value: result.monthlyIncomeTax },
-    { name: "住民税", value: result.monthlyResidentTax },
-  ]
+  const [view, setView] = useState<"husband" | "wife" | "household">("household")
 
-  if (result.nursingCareInsurance > 0) {
-    data.splice(2, 0, { name: "介護保険", value: result.nursingCareInsurance })
-  }
+  const filteredData = useMemo(() => {
+    const spouseLabel = "妻"
+    const husbandData = [
+      { name: "手取り", value: result.monthlyTakeHome },
+      { name: "健康保険", value: result.healthInsurance },
+      { name: "厚生年金", value: result.pension },
+      { name: "雇用保険", value: result.employmentInsurance },
+      { name: "所得税", value: result.monthlyIncomeTax },
+      { name: "住民税", value: result.monthlyResidentTax },
+    ]
+    if (result.nursingCareInsurance > 0) {
+      husbandData.splice(2, 0, { name: "介護保険", value: result.nursingCareInsurance })
+    }
 
-  const filteredData = data.filter((d) => d.value > 0)
+    const wifeData = [
+      { name: "手取り", value: result.spouseMonthlyTakeHome },
+      { name: "健康保険", value: result.spouseHealthInsurance },
+      { name: "厚生年金", value: result.spousePension },
+      { name: "雇用保険", value: result.spouseEmploymentInsurance },
+      { name: "所得税", value: result.spouseMonthlyIncomeTax },
+      { name: "住民税", value: result.spouseMonthlyResidentTax },
+    ]
+    if (result.spouseNursingCareInsurance > 0) {
+      wifeData.splice(2, 0, { name: "介護保険", value: result.spouseNursingCareInsurance })
+    }
+
+    if (view === "husband") return husbandData.filter((d) => d.value > 0)
+    if (view === "wife") return wifeData.filter((d) => d.value > 0)
+
+    const householdData = [
+      { name: "手取り", value: result.householdMonthlyTakeHome },
+      { name: `健康保険（夫）`, value: result.healthInsurance },
+      { name: `健康保険（${spouseLabel}）`, value: result.spouseHealthInsurance },
+      { name: `厚生年金（夫）`, value: result.pension },
+      { name: `厚生年金（${spouseLabel}）`, value: result.spousePension },
+      { name: `雇用保険（夫）`, value: result.employmentInsurance },
+      { name: `雇用保険（${spouseLabel}）`, value: result.spouseEmploymentInsurance },
+      { name: `所得税（夫）`, value: result.monthlyIncomeTax },
+      { name: `所得税（${spouseLabel}）`, value: result.spouseMonthlyIncomeTax },
+      { name: `住民税（夫）`, value: result.monthlyResidentTax },
+      { name: `住民税（${spouseLabel}）`, value: result.spouseMonthlyResidentTax },
+      { name: `介護保険（夫）`, value: result.nursingCareInsurance },
+      { name: `介護保険（${spouseLabel}）`, value: result.spouseNursingCareInsurance },
+    ]
+    return householdData.filter((d) => d.value > 0)
+  }, [result, view])
 
   return (
     <div className="flex flex-col gap-4">
       <h3 className="text-sm font-semibold text-foreground text-center">
         {"給与内訳"}
       </h3>
+      <ToggleGroup type="single" value={view} onValueChange={(value) => value && setView(value as "husband" | "wife" | "household")}>
+        <ToggleGroupItem value="husband">夫</ToggleGroupItem>
+        <ToggleGroupItem value="wife">妻</ToggleGroupItem>
+        <ToggleGroupItem value="household">世帯</ToggleGroupItem>
+      </ToggleGroup>
       <div className="h-[240px]">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
