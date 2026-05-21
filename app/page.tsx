@@ -11,11 +11,9 @@ export default function Page() {
   const [result, setResult] = useState<CalculationResult | null>(null)
 
   const handleCalculate = (
-    salary: number,
-    prefecture: string,
-    isNursingCare: boolean
+    salary: number, prefecture: string, isNursingCare: boolean, spouseSalary:number, isMarried:boolean, spouseInLargeCompany:boolean
   ) => {
-    const calc = calculateSalary(salary, prefecture, isNursingCare)
+    const calc = calculateSalary(salary, prefecture, isNursingCare, spouseSalary, isMarried, spouseInLargeCompany)
     setResult(calc)
   }
 
