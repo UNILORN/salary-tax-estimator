@@ -5,15 +5,15 @@ import { Receipt } from "lucide-react"
 import { SalaryInputForm } from "@/components/salary-input-form"
 import { SalaryResult } from "@/components/salary-result"
 import { DeductionChart } from "@/components/deduction-chart"
-import { calculateSalary, type CalculationResult } from "@/lib/salary-calculator"
+import { calculateSalary, type AdvancedDeductionInputs, type CalculationResult } from "@/lib/salary-calculator"
 
 export default function Page() {
   const [result, setResult] = useState<CalculationResult | null>(null)
 
   const handleCalculate = (
-    salary: number, prefecture: string, isNursingCare: boolean, spouseSalary:number, isMarried:boolean, spouseInLargeCompany:boolean
+    salary: number, prefecture: string, isNursingCare: boolean, spouseSalary:number, isMarried:boolean, spouseInLargeCompany:boolean, advancedDeductions: AdvancedDeductionInputs
   ) => {
-    const calc = calculateSalary(salary, prefecture, isNursingCare, spouseSalary, isMarried, spouseInLargeCompany)
+    const calc = calculateSalary(salary, prefecture, isNursingCare, spouseSalary, isMarried, spouseInLargeCompany, advancedDeductions)
     setResult(calc)
   }
 
@@ -137,6 +137,68 @@ export default function Page() {
                   className="underline hover:text-foreground"
                 >
                   {"国税庁 No.1410 給与所得控除（令和7年分以降）"}
+                </a>
+              </li>
+              <li>
+                {"住宅ローン控除: "}
+                <a
+                  href="https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1211-1.htm"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline hover:text-foreground"
+                >
+                  {"国税庁 No.1211-1 住宅借入金等特別控除"}
+                </a>
+              </li>
+              <li>
+                {"扶養控除・医療費控除・生命保険料控除: "}
+                <a
+                  href="https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1180.htm"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline hover:text-foreground"
+                >
+                  {"国税庁 No.1180"}
+                </a>
+                {" / "}
+                <a
+                  href="https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1120.htm"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline hover:text-foreground"
+                >
+                  {"No.1120"}
+                </a>
+                {" / "}
+                <a
+                  href="https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1140.htm"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline hover:text-foreground"
+                >
+                  {"No.1140"}
+                </a>
+              </li>
+              <li>
+                {"ふるさと納税: "}
+                <a
+                  href="https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1155.htm"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline hover:text-foreground"
+                >
+                  {"国税庁 No.1155 ふるさと納税"}
+                </a>
+              </li>
+              <li>
+                {"児童手当: "}
+                <a
+                  href="https://www.cfa.go.jp/policies/kokoseido/jidouteate/annai"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline hover:text-foreground"
+                >
+                  {"こども家庭庁 児童手当制度のご案内"}
                 </a>
               </li>
             </ul>

@@ -27,7 +27,6 @@ export function DeductionChart({ result }: DeductionChartProps) {
   const [view, setView] = useState<"husband" | "wife" | "household">("household")
 
   const filteredData = useMemo(() => {
-    const spouseLabel = "妻"
     const husbandData = [
       { name: "手取り", value: result.monthlyTakeHome },
       { name: "健康保険", value: result.healthInsurance },
@@ -57,18 +56,12 @@ export function DeductionChart({ result }: DeductionChartProps) {
 
     const householdData = [
       { name: "手取り", value: result.householdMonthlyTakeHome },
-      { name: `健康保険（夫）`, value: result.healthInsurance },
-      { name: `健康保険（${spouseLabel}）`, value: result.spouseHealthInsurance },
-      { name: `厚生年金（夫）`, value: result.pension },
-      { name: `厚生年金（${spouseLabel}）`, value: result.spousePension },
-      { name: `雇用保険（夫）`, value: result.employmentInsurance },
-      { name: `雇用保険（${spouseLabel}）`, value: result.spouseEmploymentInsurance },
-      { name: `所得税（夫）`, value: result.monthlyIncomeTax },
-      { name: `所得税（${spouseLabel}）`, value: result.spouseMonthlyIncomeTax },
-      { name: `住民税（夫）`, value: result.monthlyResidentTax },
-      { name: `住民税（${spouseLabel}）`, value: result.spouseMonthlyResidentTax },
-      { name: `介護保険（夫）`, value: result.nursingCareInsurance },
-      { name: `介護保険（${spouseLabel}）`, value: result.spouseNursingCareInsurance },
+      { name: "健康保険", value: result.healthInsurance + result.spouseHealthInsurance },
+      { name: "厚生年金", value: result.pension + result.spousePension },
+      { name: "雇用保険", value: result.employmentInsurance + result.spouseEmploymentInsurance },
+      { name: "所得税", value: result.monthlyIncomeTax + result.spouseMonthlyIncomeTax },
+      { name: "住民税", value: result.monthlyResidentTax + result.spouseMonthlyResidentTax },
+      { name: "介護保険", value: result.nursingCareInsurance + result.spouseNursingCareInsurance },
     ]
     return householdData.filter((d) => d.value > 0)
   }, [result, view])
