@@ -55,6 +55,16 @@ export const PREFECTURES: { code: string; name: string; rate: number }[] = [
 const PENSION_RATE = 0.183 / 2
 const NURSING_CARE_RATE = 0.0159 / 2
 const EMPLOYMENT_INSURANCE_RATE = 0.0055
+const NATIONAL_PENSION_MONTHLY = 17_920
+
+export type SpouseWorkType = "salary" | "freelance"
+
+export interface SpouseFreelanceInputs {
+  workType: SpouseWorkType
+  annualRevenue: number
+  annualExpense: number
+  isNursingCare: boolean
+}
 
 export interface AdvancedDeductionInputs {
   mortgageYearEndBalance: number
@@ -188,6 +198,15 @@ function isSocialDependentSpouse(spouseAnnualIncome: number, spouseInLargeCompan
   const exceeds106 = spouseInLargeCompany && spouseAnnualIncome >= 1_060_000
   if (exceeds106) return false
   return spouseAnnualIncome < 1_300_000
+}
+
+function calcNationalHealthInsuranceMonthly(businessIncome: number, isNursingCare: boolean): number {
+  const base = Math.max(0, businessIncome - 430_000)
+  const medical = Math.min(670_000, Math.floor(base * 0.0751) + 47_600)
+  const support = Math.min(260_000, Math.floor(base * 0.028) + 17_600)
+  const childSupport = Math.min(30_000, Math.floor(base * 0.0027) + 1_873)
+  const nursingCare = isNursingCare ? Math.min(170_000, Math.floor(base * 0.0243) + 17_800) : 0
+  return Math.round((medical + support + childSupport + nursingCare) / 12)
 }
 
 function calcNewLifeInsuranceDeductionForIncomeTax(premium: number): number {
@@ -348,6 +367,30 @@ function calcPerson(monthlySalary: number, healthRate: number, isNursingCare: bo
   return { annualIncome, salaryIncome, healthInsurance, nursingCareInsurance, pension, employmentInsurance, totalSocialInsurance, monthlyIncomeTax, monthlyResidentTax, monthlyTakeHome, advanced }
 }
 
+function calcFreelancePerson(annualRevenue: number, annualExpense: number, isNursingCare: boolean, hasNationalInsurance: boolean) {
+  const annualIncome = annualRevenue
+  const salaryIncome = Math.max(0, annualRevenue - annualExpense)
+  const monthlyGross = Math.round(annualRevenue / 12)
+  const healthInsurance = hasNationalInsurance ? calcNationalHealthInsuranceMonthly(salaryIncome, isNursingCare) : 0
+  const nursingCareInsurance = 0
+  const pension = hasNationalInsurance ? NATIONAL_PENSION_MONTHLY : 0
+  const employmentInsurance = 0
+  const totalSocialInsurance = healthInsurance + pension
+  const socialInsuranceDeductionAnnual = totalSocialInsurance * 12
+
+  const taxableIncomeIT = Math.max(0, salaryIncome - socialInsuranceDeductionAnnual - getBasicDeductionIncomeTax(salaryIncome))
+  const annualIncomeTax = Math.floor(calcIncomeTax(taxableIncomeIT))
+  const annualReconstructionTax = Math.floor(annualIncomeTax * 0.021)
+  const monthlyIncomeTax = Math.round((annualIncomeTax + annualReconstructionTax) / 12)
+
+  const taxableIncomeRT = Math.max(0, salaryIncome - socialInsuranceDeductionAnnual - getBasicDeductionResidentTax(salaryIncome))
+  const annualResidentTax = Math.max(0, Math.floor(taxableIncomeRT * 0.1) - 2_500 + 5_500)
+  const monthlyResidentTax = Math.round(annualResidentTax / 12)
+  const monthlyTakeHome = monthlyGross - totalSocialInsurance - monthlyIncomeTax - monthlyResidentTax
+
+  return { annualIncome, salaryIncome, monthlyGross, healthInsurance, nursingCareInsurance, pension, employmentInsurance, totalSocialInsurance, monthlyIncomeTax, monthlyResidentTax, monthlyTakeHome }
+}
+
 export interface CalculationResult {
   monthlySalary: number
   annualIncome: number
@@ -371,6 +414,7 @@ export interface CalculationResult {
   spouseMonthlyResidentTax: number
   spouseTotalMonthlyDeduction: number
   spouseMonthlyTakeHome: number
+  spouseWorkType: SpouseWorkType
   spouseIsSocialDependent: boolean
   spouseSpecialDeductionIncomeTax: number
   spouseSpecialDeductionResidentTax: number
@@ -379,20 +423,26 @@ export interface CalculationResult {
   advanced: AdvancedDeductionResult
 }
 
-export function calculateSalary(monthlySalary: number, prefectureCode: string, isNursingCare: boolean, spouseMonthlySalary = 0, isMarried = false, spouseInLargeCompany = true, advancedDeductions: AdvancedDeductionInputs = DEFAULT_ADVANCED_DEDUCTIONS): CalculationResult {
+export function calculateSalary(monthlySalary: number, prefectureCode: string, isNursingCare: boolean, spouseMonthlySalary = 0, isMarried = false, spouseInLargeCompany = true, advancedDeductions: AdvancedDeductionInputs = DEFAULT_ADVANCED_DEDUCTIONS, spouseFreelance: SpouseFreelanceInputs = { workType: "salary", annualRevenue: 0, annualExpense: 0, isNursingCare: false }): CalculationResult {
   const prefecture = PREFECTURES.find((p) => p.code === prefectureCode) ?? PREFECTURES[12]
   const healthRate = prefecture.rate / 100 / 2
 
-  const spouseAnnualIncome = spouseMonthlySalary * 12
-  const spouseSalaryIncome = Math.max(0, spouseAnnualIncome - calcSalaryDeduction(spouseAnnualIncome))
+  const spouseIsFreelance = spouseFreelance.workType === "freelance"
+  const spouseAnnualIncome = spouseIsFreelance ? spouseFreelance.annualRevenue : spouseMonthlySalary * 12
+  const spouseSalaryIncome = spouseIsFreelance
+    ? Math.max(0, spouseFreelance.annualRevenue - spouseFreelance.annualExpense)
+    : Math.max(0, spouseAnnualIncome - calcSalaryDeduction(spouseAnnualIncome))
   const husbandPreview = calcPerson(monthlySalary, healthRate, isNursingCare, true)
 
   const spouseSpecialDeductionIncomeTax = isMarried ? calcSpouseSpecialDeductionIncomeTax(husbandPreview.salaryIncome, spouseSalaryIncome) : 0
   const spouseSpecialDeductionResidentTax = isMarried ? calcSpouseSpecialDeductionResidentTax(husbandPreview.salaryIncome, spouseSalaryIncome) : 0
 
   const husband = calcPerson(monthlySalary, healthRate, isNursingCare, true, spouseSpecialDeductionIncomeTax, spouseSpecialDeductionResidentTax, advancedDeductions)
-  const spouseIsSocialDependent = isMarried ? isSocialDependentSpouse(spouseAnnualIncome, spouseInLargeCompany) : false
-  const wife = calcPerson(spouseMonthlySalary, healthRate, false, !spouseIsSocialDependent)
+  const spouseIsSocialDependent = isMarried ? isSocialDependentSpouse(spouseIsFreelance ? spouseSalaryIncome : spouseAnnualIncome, spouseInLargeCompany) : false
+  const wife = spouseIsFreelance
+    ? calcFreelancePerson(spouseFreelance.annualRevenue, spouseFreelance.annualExpense, spouseFreelance.isNursingCare, !spouseIsSocialDependent)
+    : calcPerson(spouseMonthlySalary, healthRate, false, !spouseIsSocialDependent)
+  const wifeMonthlyGross = "monthlyGross" in wife ? wife.monthlyGross : spouseMonthlySalary
 
   return {
     monthlySalary,
@@ -407,7 +457,7 @@ export function calculateSalary(monthlySalary: number, prefectureCode: string, i
     monthlyResidentTax: husband.monthlyResidentTax,
     totalMonthlyDeduction: monthlySalary - husband.monthlyTakeHome,
     monthlyTakeHome: husband.monthlyTakeHome,
-    spouseMonthlySalary,
+    spouseMonthlySalary: wifeMonthlyGross,
     spouseAnnualIncome,
     spouseHealthInsurance: wife.healthInsurance,
     spouseNursingCareInsurance: wife.nursingCareInsurance,
@@ -415,8 +465,9 @@ export function calculateSalary(monthlySalary: number, prefectureCode: string, i
     spouseEmploymentInsurance: wife.employmentInsurance,
     spouseMonthlyIncomeTax: wife.monthlyIncomeTax,
     spouseMonthlyResidentTax: wife.monthlyResidentTax,
-    spouseTotalMonthlyDeduction: spouseMonthlySalary - wife.monthlyTakeHome,
+    spouseTotalMonthlyDeduction: wifeMonthlyGross - wife.monthlyTakeHome,
     spouseMonthlyTakeHome: wife.monthlyTakeHome,
+    spouseWorkType: spouseFreelance.workType,
     spouseIsSocialDependent,
     spouseSpecialDeductionIncomeTax,
     spouseSpecialDeductionResidentTax,

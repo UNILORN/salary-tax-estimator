@@ -20,6 +20,8 @@ interface PersonResult {
   monthlyIncomeTax: number
   monthlyResidentTax: number
   isSocialDependent?: boolean
+  healthInsuranceLabel?: string
+  pensionLabel?: string
 }
 
 function AmountPair({ monthly, label }: { monthly: number; label: string }) {
@@ -56,9 +58,9 @@ function PersonCard({ person }: { person: PersonResult }) {
   const deductionTotal = socialInsuranceTotal + taxTotal
   const takeHomeRate = person.monthlyGross > 0 ? Math.round((person.monthlyTakeHome / person.monthlyGross) * 100) : 0
   const breakdown = [
-    { label: "健康保険", monthly: person.healthInsurance, accent: "hsl(200, 50%, 45%)" },
+    { label: person.healthInsuranceLabel ?? "健康保険", monthly: person.healthInsurance, accent: "hsl(200, 50%, 45%)" },
     { label: "介護保険", monthly: person.nursingCareInsurance, accent: "hsl(180, 40%, 45%)" },
-    { label: "厚生年金", monthly: person.pension, accent: "hsl(30, 60%, 55%)" },
+    { label: person.pensionLabel ?? "厚生年金", monthly: person.pension, accent: "hsl(30, 60%, 55%)" },
     { label: "雇用保険", monthly: person.employmentInsurance, accent: "hsl(340, 50%, 55%)" },
     { label: "所得税", monthly: person.monthlyIncomeTax, accent: "hsl(260, 40%, 55%)" },
     { label: "住民税", monthly: person.monthlyResidentTax, accent: "hsl(20, 10%, 35%)" },
@@ -191,6 +193,8 @@ export function SalaryResult({ result }: SalaryResultProps) {
     monthlyIncomeTax: result.spouseMonthlyIncomeTax,
     monthlyResidentTax: result.spouseMonthlyResidentTax,
     isSocialDependent: result.spouseIsSocialDependent,
+    healthInsuranceLabel: result.spouseWorkType === "freelance" ? "国民健康保険" : "健康保険",
+    pensionLabel: result.spouseWorkType === "freelance" ? "国民年金" : "厚生年金",
   }
 
   return (

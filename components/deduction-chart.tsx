@@ -41,8 +41,8 @@ export function DeductionChart({ result }: DeductionChartProps) {
 
     const wifeData = [
       { name: "手取り", value: result.spouseMonthlyTakeHome },
-      { name: "健康保険", value: result.spouseHealthInsurance },
-      { name: "厚生年金", value: result.spousePension },
+      { name: result.spouseWorkType === "freelance" ? "国民健康保険" : "健康保険", value: result.spouseHealthInsurance },
+      { name: result.spouseWorkType === "freelance" ? "国民年金" : "厚生年金", value: result.spousePension },
       { name: "雇用保険", value: result.spouseEmploymentInsurance },
       { name: "所得税", value: result.spouseMonthlyIncomeTax },
       { name: "住民税", value: result.spouseMonthlyResidentTax },
@@ -57,7 +57,7 @@ export function DeductionChart({ result }: DeductionChartProps) {
     const householdData = [
       { name: "手取り", value: result.householdMonthlyTakeHome },
       { name: "健康保険", value: result.healthInsurance + result.spouseHealthInsurance },
-      { name: "厚生年金", value: result.pension + result.spousePension },
+      { name: "年金", value: result.pension + result.spousePension },
       { name: "雇用保険", value: result.employmentInsurance + result.spouseEmploymentInsurance },
       { name: "所得税", value: result.monthlyIncomeTax + result.spouseMonthlyIncomeTax },
       { name: "住民税", value: result.monthlyResidentTax + result.spouseMonthlyResidentTax },

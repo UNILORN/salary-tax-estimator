@@ -7,10 +7,10 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { DEFAULT_ADVANCED_DEDUCTIONS, PREFECTURES, type AdvancedDeductionInputs } from "@/lib/salary-calculator"
+import { DEFAULT_ADVANCED_DEDUCTIONS, PREFECTURES, type AdvancedDeductionInputs, type SpouseFreelanceInputs, type SpouseWorkType } from "@/lib/salary-calculator"
 
 interface SalaryInputFormProps {
-  onCalculate: (salary: number, prefecture: string, isNursingCare: boolean, spouseSalary: number, isMarried: boolean, spouseInLargeCompany: boolean, advancedDeductions: AdvancedDeductionInputs) => void
+  onCalculate: (salary: number, prefecture: string, isNursingCare: boolean, spouseSalary: number, isMarried: boolean, spouseInLargeCompany: boolean, advancedDeductions: AdvancedDeductionInputs, spouseFreelance: SpouseFreelanceInputs) => void
 }
 
 function normalizeNumber(value: string) {
@@ -49,6 +49,10 @@ export function SalaryInputForm({ onCalculate }: SalaryInputFormProps) {
   const [annualSalary, setAnnualSalary] = useState("")
   const [spouseSalary, setSpouseSalary] = useState("")
   const [spouseAnnualSalary, setSpouseAnnualSalary] = useState("")
+  const [spouseWorkType, setSpouseWorkType] = useState<SpouseWorkType>("salary")
+  const [spouseBusinessRevenue, setSpouseBusinessRevenue] = useState("")
+  const [spouseBusinessExpense, setSpouseBusinessExpense] = useState("")
+  const [spouseFreelanceIsNursingCare, setSpouseFreelanceIsNursingCare] = useState(false)
   const [prefecture, setPrefecture] = useState("13")
   const [isNursingCare, setIsNursingCare] = useState(false)
   const [isMarried, setIsMarried] = useState(true)
@@ -105,12 +109,19 @@ export function SalaryInputForm({ onCalculate }: SalaryInputFormProps) {
     hometownDonation: Number(advancedDeductions.hometownDonation || 0),
   })
 
+  const getSpouseFreelanceValues = (): SpouseFreelanceInputs => ({
+    workType: spouseWorkType,
+    annualRevenue: Number(spouseBusinessRevenue || 0),
+    annualExpense: Number(spouseBusinessExpense || 0),
+    isNursingCare: spouseFreelanceIsNursingCare,
+  })
+
   return (
     <form
       onSubmit={(e) => {
         e.preventDefault()
         if (Number(salary) > 0) {
-          onCalculate(Number(salary), prefecture, isNursingCare, Number(spouseSalary || 0), isMarried, spouseInLargeCompany, getAdvancedDeductionValues())
+          onCalculate(Number(salary), prefecture, isNursingCare, Number(spouseSalary || 0), isMarried, spouseInLargeCompany, getAdvancedDeductionValues(), getSpouseFreelanceValues())
         }
       }}
       className="flex flex-col gap-4"
@@ -134,23 +145,61 @@ export function SalaryInputForm({ onCalculate }: SalaryInputFormProps) {
         </div>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="flex flex-col gap-3 rounded-lg border p-3">
         <div className="flex flex-col gap-2">
-          <Label>妻の月額給与（額面）</Label>
-          <Input
-            inputMode="numeric"
-            value={formatNumber(spouseSalary)}
-            onChange={(e) => handleMonthlySalaryChange(e.target.value, setSpouseSalary, setSpouseAnnualSalary)}
-          />
+          <Label>妻の収入区分</Label>
+          <Select value={spouseWorkType} onValueChange={(value) => setSpouseWorkType(value as SpouseWorkType)}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="salary">給与</SelectItem>
+              <SelectItem value="freelance">フリーランス</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
-        <div className="flex flex-col gap-2">
-          <Label>妻の年収（額面）</Label>
-          <Input
-            inputMode="numeric"
-            value={formatNumber(spouseAnnualSalary)}
-            onChange={(e) => handleAnnualSalaryChange(e.target.value, setSpouseSalary, setSpouseAnnualSalary)}
-          />
-        </div>
+
+        {spouseWorkType === "salary" ? (
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="flex flex-col gap-2">
+              <Label>妻の月額給与（額面）</Label>
+              <Input
+                inputMode="numeric"
+                value={formatNumber(spouseSalary)}
+                onChange={(e) => handleMonthlySalaryChange(e.target.value, setSpouseSalary, setSpouseAnnualSalary)}
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label>妻の年収（額面）</Label>
+              <Input
+                inputMode="numeric"
+                value={formatNumber(spouseAnnualSalary)}
+                onChange={(e) => handleAnnualSalaryChange(e.target.value, setSpouseSalary, setSpouseAnnualSalary)}
+              />
+            </div>
+          </div>
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="flex flex-col gap-2">
+              <Label>妻の年間売上</Label>
+              <Input
+                inputMode="numeric"
+                value={formatNumber(spouseBusinessRevenue)}
+                onChange={(e) => setSpouseBusinessRevenue(normalizeNumber(e.target.value))}
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label>妻の年間経費</Label>
+              <Input
+                inputMode="numeric"
+                value={formatNumber(spouseBusinessExpense)}
+                onChange={(e) => setSpouseBusinessExpense(normalizeNumber(e.target.value))}
+              />
+            </div>
+            <div className="flex items-center justify-between rounded-lg border p-3 sm:col-span-2">
+              <Label>妻が40〜64歳（介護分対象）</Label>
+              <Switch checked={spouseFreelanceIsNursingCare} onCheckedChange={setSpouseFreelanceIsNursingCare} />
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="flex items-center justify-between rounded-lg border p-3">

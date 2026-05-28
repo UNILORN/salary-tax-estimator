@@ -5,15 +5,15 @@ import { Receipt } from "lucide-react"
 import { SalaryInputForm } from "@/components/salary-input-form"
 import { SalaryResult } from "@/components/salary-result"
 import { DeductionChart } from "@/components/deduction-chart"
-import { calculateSalary, type AdvancedDeductionInputs, type CalculationResult } from "@/lib/salary-calculator"
+import { calculateSalary, type AdvancedDeductionInputs, type CalculationResult, type SpouseFreelanceInputs } from "@/lib/salary-calculator"
 
 export default function Page() {
   const [result, setResult] = useState<CalculationResult | null>(null)
 
   const handleCalculate = (
-    salary: number, prefecture: string, isNursingCare: boolean, spouseSalary:number, isMarried:boolean, spouseInLargeCompany:boolean, advancedDeductions: AdvancedDeductionInputs
+    salary: number, prefecture: string, isNursingCare: boolean, spouseSalary:number, isMarried:boolean, spouseInLargeCompany:boolean, advancedDeductions: AdvancedDeductionInputs, spouseFreelance: SpouseFreelanceInputs
   ) => {
-    const calc = calculateSalary(salary, prefecture, isNursingCare, spouseSalary, isMarried, spouseInLargeCompany, advancedDeductions)
+    const calc = calculateSalary(salary, prefecture, isNursingCare, spouseSalary, isMarried, spouseInLargeCompany, advancedDeductions, spouseFreelance)
     setResult(calc)
   }
 
@@ -199,6 +199,26 @@ export default function Page() {
                   className="underline hover:text-foreground"
                 >
                   {"こども家庭庁 児童手当制度のご案内"}
+                </a>
+              </li>
+              <li>
+                {"国民健康保険・国民年金: "}
+                <a
+                  href="https://www.city.shibuya.tokyo.jp/kurashi/kokuho/kenkohokenryo/kokuho_ritu2026.html"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline hover:text-foreground"
+                >
+                  {"渋谷区 令和8年度国民健康保険料率"}
+                </a>
+                {" / "}
+                <a
+                  href="https://www.nenkin.go.jp/international/japanese-system/nationalpension/nationalpension_jp/npcontribution_jp.html"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline hover:text-foreground"
+                >
+                  {"日本年金機構 国民年金保険料"}
                 </a>
               </li>
             </ul>
